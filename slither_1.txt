@@ -1,0 +1,35 @@
+(setq list-of-moves '())
+
+(defun print-row (row)
+    (cond ((null row) (princ " "))
+          (t (princ " ")
+              (cond ((equal '- (car row)) (princ " "))
+                         (t (princ (car row))) )
+             (print-row (cdr row)) ) ) )
+
+(defun print-board (board)
+    (cond ((null board) (princ "+ + + +") (terpri))
+          (t (princ "+ + + +") (terpri)
+             (print-row (car board)) (terpri)
+             (print-board (cdr board)) (terpri) ) ) )
+
+(defun describe-game ()
+       (format t "This game is played on a 5x5 to 25x30 grid with dots at each of the grid corners.~%Some of the squares contain a number between 0 and 3 inclusively.~%The number identifies the number of lines that surround the square.~%Your objective is to find a single looped path with no crosses or branches.") )
+
+(defun create-board (filename)
+    (setq infile (open filename))
+    (setq board (read infile))
+    (setq cboard (mapcar
+                     (lambda (x)
+                         (cond ((listp x) (mapcar
+                                              (lambda (y)
+                                                  (cond ((constantp y) 0)
+                                                      (t y) ) ) x))) ) board)))
+
+(defun accept-move ()
+    (princ "Make a move : ")
+    (setq move (read)) 
+    (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
+    (setf (nth (car move) (nth (cadr move) cboard)) (1+ (nth (nth 1 move) (nth (nth 0 move) cboard))))
+    (push move list-of-moves) )
+
