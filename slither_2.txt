@@ -21,7 +21,7 @@
 	            (t (princ "-") (princ "+")) )
 	        (setq i (1+ i))
 	        (when (equal i num-of-cols) (terpri) (return t)) ) )
-	    ((princ "+") (setq i 0) (loop
+	    (t (princ "+") (setq i 0) (loop
 	        (cond ((null (member (list mypos i 'T) mymoves :test #'equal)) (princ " ") (princ "+"))
 		        (t (princ "-") (princ "+")) )
 		    (setq i (1+ i))
