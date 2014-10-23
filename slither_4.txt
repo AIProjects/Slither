@@ -39,13 +39,17 @@
 	     (print-board (cdr pboard) num-of-rows num-of-cols list-of-moves (1+ mypos)) (terpri) ) ) )
 		 
 ;;increment the counter for a particular square
-(defun update-square (r c cboard)
+(defun update-square (r c cboard type)
     (cond
-        ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1+ (nth c (nth r cboard)))))
-		(t nil) ) )
+	    ((equal type 1)	(cond
+                            ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1+ (nth c (nth r cboard)))))
+		                    (t nil) ))
+        (t (cond
+		        ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1- (nth c (nth r cboard)))))
+		        (t nil) )) ) )
 		
 ;;to update the counter-board (cboard) based on the move
-(defun update-score (move num-of-rows num-of-cols)
+(defun update-score (move num-of-rows num-of-cols type)
     (setq r (nth 0 move))
 	(setq c (nth 1 move))
     (cond
@@ -54,41 +58,41 @@
 			(< r (1- num-of-rows))
 			(> c 0)
 			(< c (1- num-of-cols)) ) (cond
-			                             ((equal (nth 2 move) 'T) (update-square (1- r) c cboard))
-										 ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard))
-										 ((equal (nth 2 move) 'L) (update-square r (1- c cboard)))
-										 (t (update-square r (1+ c) cboard)) )
-									 (update-square r c cboard) )
+			                             ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
+										 ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
+										 ((equal (nth 2 move) 'L) (update-square r (1- c cboard type)))
+										 (t (update-square r (1+ c) cboard type)) )
+									 (update-square r c cboard type) )
 		((equal c 0) (cond
 		                 ((equal r 0) (cond 
-						                  ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard))
+						                  ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
 						                  (t nil) ))
 						 ((equal r (1- num-of-rows)) (cond 
-						                                 ((equal (nth 2 move) 'T) (update-square (1- r) c cboard))
+						                                 ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
 						                                 (t nil) ))
 						 (t nil) )
 					 (cond
-					     ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard))
+					     ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard type))
 						 (t nil) )
-                     (update-square r c cboard) )
+                     (update-square r c cboard type) )
         ((equal c (1- num-of-cols)) (cond
                                         ((equal r 0) (cond
-                                                         ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard))
+                                                         ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
 														 (t nil) ))
 										((equal r (1- num-of-rows)) (cond
-										                                ((equal (nth 2 move) 'T) (update-square (1- r) c cboard))
+										                                ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
 																		(t nil) ))
 										(t nil) )
 									(cond
-									    ((equal (nth 2 move) 'L) (update-square (1- r) c cboard))
+									    ((equal (nth 2 move) 'L) (update-square (1- r) c cboard type))
 										(t nil) )
-									(update-square r c cboard) )
+									(update-square r c cboard type) )
 		(t (cond
-		       ((equal (nth 2 move) 'L) (update-square r (1- c) cboard))
-			   ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard))
-			   ((equal (nth 2 move) 'T) (update-square (1- r) c cboard))
-			   (t (update-square (1+ r) c cboard)) )
-			(update-square r c cboard) ) ) )
+		       ((equal (nth 2 move) 'L) (update-square r (1- c) cboard type))
+			   ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard type))
+			   ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
+			   (t (update-square (1+ r) c cboard type)) )
+			(update-square r c cboard type) ) ) )
 			
 (defun is-row-valid (move num-of-rows)
     (cond
@@ -112,16 +116,25 @@
 			(equal (nth 2 move) 'R)
 			(equal (nth 2 move) 'L) ) t )
 		(t nil) ) )
+		
+(defun undo-move (num-of-rows num-of-cols list-of-moves) 
+    (princ "Enter the move to undo")
+	(terpri)
+	(set 'move (list (read) (read) (read)))
+	(setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
+    (update-score move num-of-rows num-of-cols 0)
+	(set 'list-of-moves (remove move list-of-moves :test #'equal)) )    
 
 (defun accept-move ()
     (princ "Make a move : ")
-    (set 'move (list (read) (read) (read))) 
-    (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
-	(cond
-	    ((not (is-row-valid move num-of-rows)) (princ "Please enter a valid row number") (terpri) (accept-move))
-		((not (is-column-valid move num-of-cols)) (princ "Please enter a valid column number") (terpri) (accept-move))
-		((not (is-edge-valid move)) (princ "Please enter a valid value for edge. Valid values for edge are T, B, R or L") (terpri) (accept-move))
-	    (t (update-score move num-of-rows num-of-cols) (push move list-of-moves)) ) )
+    (set 'move (list (read) (read) (read)))
+	(cond ((equal '(undo my move) move) (undo-move num-of-rows num-of-cols list-of-moves))
+	      (t (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
+	         (cond	    
+	             ((not (is-row-valid move num-of-rows)) (princ "Please enter a valid row number") (terpri) (accept-move))
+		         ((not (is-column-valid move num-of-cols)) (princ "Please enter a valid column number") (terpri) (accept-move))
+		         ((not (is-edge-valid move)) (princ "Please enter a valid value for edge. Valid values for edge are T, B, R or L") (terpri) (accept-move))		
+	             (t (update-score move num-of-rows num-of-cols 1) (push move list-of-moves)) ) ) ) )
 	
 ;; checks if there is any T shape (crossing)
 (defun is-crossing (moves num-of-rows num-of-cols)
@@ -152,15 +165,19 @@
 		(t nil) ) )
 		
 ;;set edge in edge counter
-(defun update-edge-count (i edge-type)
-    (setf (nth i edge-type) (1+ (nth i edge-type))) )
+(defun update-edge-count (i edge-type direction)
+    (cond
+	    ((equal direction 0) (setf (nth i edge-type) (1- (nth i edge-type))))
+        (t(setf (nth i edge-type) (1+ (nth i edge-type)))) ) )
 	
 ;;checks if loop is closed
 (defun is-loop (moves v h)
+    (setq v (make-list num-of-rows :initial-element 0))
+    (setq h (make-list num-of-cols :initial-element 0))
 	(loop for move in moves do
     (cond
-	    ((or (equal (nth 2 move) 'L) (equal (nth 2 move) 'R)) (update-edge-count (nth 0 move) v))
-		(t (update-edge-count (nth 1 move) h)) ) ) 
+	    ((or (equal (nth 2 move) 'L) (equal (nth 2 move) 'R)) (update-edge-count (nth 0 move) v 1))
+		(t (update-edge-count (nth 1 move) h 1)) ) ) 
 	(cond ((or
              (some #'(lambda (n) (equal (mod n 2) 1)) h)
 		     (some #'(lambda (n) (equal (mod n 2) 1)) v) ) nil )
@@ -183,8 +200,6 @@
 (setq list-of-moves '())
 (setq num-of-rows (list-length board))
 (setq num-of-cols (list-length (car board)))
-(setq v (make-list num-of-rows :initial-element 0))
-(setq h (make-list num-of-cols :initial-element 0))
 	
 (loop
     (print-board pboard num-of-rows num-of-cols list-of-moves 0)
