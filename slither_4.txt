@@ -1,3 +1,18 @@
+;;function that describes the game to user
+(defun describe-game ()
+    (write-line " ")
+	(write-line " ")
+    (write-line "Welcome to the game of slither!")
+	(write-line "Your goal is to put edges on the board so that they form a closed loop with no crossing or branches")
+	(terpri)
+	(write-line "Rules:")
+	(format t "1. Enter the edge to be put on a square on the board in the format M N E, where M = row number, N = column number and E = type of edge (T = top, ~%   B = bottom, L = left and R = right)~%" )
+	(format t "2. If there is a number written inside a square then it will have exactly that many edges surrounding it. ~%   For example if a square has 3 inside it, it should have 3 edges surrounding it. If a square has 0 inside it, it should not have any edge surrounding ~%   it. If a square has no number inside it, it can have any number of edges surrounding it.~%")
+	(write-line "3. Entering the same edge twice will undo that move")
+	(write-line "4. There is no time or move limit")
+	(write-line "5. Game will end when you are successfully able to put a loop on the board")
+    (terpri) )
+
 ;;function to accept board configuration and initialize counters
 (defun create-board (filename)
     (setq infile (open filename))
@@ -170,7 +185,7 @@
         (t(setf (nth i edge-type) (1+ (nth i edge-type)))) ) )
 	
 ;;checks if loop is closed
-(defun is-loop (moves v h)
+(defun is-loop (moves)
     (setq v (make-list num-of-rows :initial-element 0))
     (setq h (make-list num-of-cols :initial-element 0))
 	(loop for move in moves do
@@ -183,27 +198,41 @@
 		  (t t) ))
 		  
 ;;to check if user won
-(defun win-detected (board cboard moves num-of-rows num-of-cols v h)
+(defun win-detected (board cboard moves num-of-rows num-of-cols)
     (cond
 	    ((and (equal cboard board)
-		      (is-loop moves v h)
+		      (is-loop moves)
 			  (not (is-crossing moves num-of-rows num-of-cols)) ) t)
 		(t nil) ) )
 		  
 ;;*******************actual game starts from here*************************
 
-;;accept board
-(create-board "D:\\Ruchi\\docs\\UFL\\COURSES\\AI\\Project\\board.txt")
-
-;;initialize list of moves and number of rows and columns
-(setq list-of-moves '())
-(setq num-of-rows (list-length board))
-(setq num-of-cols (list-length (car board)))
-	
-(loop
-    (princ "   ")
-    (loop for i from 1 to num-of-cols do (princ i) (princ " "))
-	(terpri)
-    (print-board pboard num-of-rows num-of-cols list-of-moves 0)
-	(accept-move)
-	(when (win-detected board cboard list-of-moves num-of-rows num-of-cols v h) (print-board pboard num-of-rows num-of-cols list-of-moves 0) (princ "YOU WIN!") (return t)) )
+(defun slither ()
+	(loop
+		(setq choice 'y)
+		(describe-game)
+		
+		(princ "Enter the name of the file containing description of the board:")
+		(setq infile (read-line))
+		(terpri)
+		
+		;;(create-board "D:\\Ruchi\\docs\\UFL\\COURSES\\AI\\Project\\board.txt")
+		(create-board infile)
+		
+		;;initialize list of moves and number of rows and columns
+		(setq list-of-moves '())
+		(setq num-of-rows (list-length board))
+		(setq num-of-cols (list-length (car board)))
+		
+		(loop
+			(princ "   ")
+			(loop for i from 1 to num-of-cols do (princ i) (princ " "))
+			(terpri)
+			(print-board pboard num-of-rows num-of-cols list-of-moves 0)
+			(accept-move)
+			(when (win-detected board cboard list-of-moves num-of-rows num-of-cols) (print-board pboard num-of-rows num-of-cols list-of-moves 0) (princ "YOU WIN!") (return t)) )
+			
+		(terpri)
+		(princ "Do you want to play again? (y/n):")
+		(setq choice (read))
+		(when (equal choice 'n) (return t)) ) )
