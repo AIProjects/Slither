@@ -10,7 +10,7 @@
                                                   (cond ((constantp y) 0)
                                                       (t y) ) ) x))) ) board)))
 													  
-(defun print-row (row r c)
+(defun print-row (row r c)    
     (cond ((null row)
 	    (cond ((member (list r (1- c) 'R) list-of-moves :test #'equal) (princ "|"))
 		    (t (princ " ")) ) )
@@ -34,7 +34,8 @@
 			    ((member (list (1- mypos) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
 		        (t (princ " ") (princ "+")) )
 		    (setq i (1+ i))
-		    (when (equal i num-of-cols) (terpri) (return t)) )	 
+		    (when (equal i num-of-cols) (terpri) (return t)) )
+         ;;(princ (1+ mypos)) (princ " ")			
 	     (print-row (car pboard) mypos 0) (terpri)
 	     (print-board (cdr pboard) num-of-rows num-of-cols list-of-moves (1+ mypos)) (terpri) ) ) )
 		 
@@ -117,24 +118,22 @@
 			(equal (nth 2 move) 'L) ) t )
 		(t nil) ) )
 		
-(defun undo-move (num-of-rows num-of-cols list-of-moves) 
-    (princ "Enter the move to undo")
-	(terpri)
-	(set 'move (list (read) (read) (read)))
-	(setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
+(defun undo-move (num-of-rows num-of-cols list-of-moves)
     (update-score move num-of-rows num-of-cols 0)
 	(set 'list-of-moves (remove move list-of-moves :test #'equal)) )    
 
 (defun accept-move ()
     (princ "Make a move : ")
     (set 'move (list (read) (read) (read)))
-	(cond ((equal '(undo my move) move) (undo-move num-of-rows num-of-cols list-of-moves))
+	(cond ((not (and (numberp (nth 0 move)) (numberp (nth 1 move)))) (princ "Invalid input!") (terpri))
 	      (t (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
 	         (cond	    
 	             ((not (is-row-valid move num-of-rows)) (princ "Please enter a valid row number") (terpri) (accept-move))
 		         ((not (is-column-valid move num-of-cols)) (princ "Please enter a valid column number") (terpri) (accept-move))
 		         ((not (is-edge-valid move)) (princ "Please enter a valid value for edge. Valid values for edge are T, B, R or L") (terpri) (accept-move))		
-	             (t (update-score move num-of-rows num-of-cols 1) (push move list-of-moves)) ) ) ) )
+	             (t (cond
+				        ((member move list-of-moves :test #'equal) (undo-move num-of-rows num-of-cols list-of-moves))
+						(t (update-score move num-of-rows num-of-cols 1) (push move list-of-moves)) )) ) ) ) )
 	
 ;; checks if there is any T shape (crossing)
 (defun is-crossing (moves num-of-rows num-of-cols)
