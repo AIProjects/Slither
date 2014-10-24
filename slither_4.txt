@@ -22,20 +22,20 @@
             (print-row (cdr row) r (1+ c)) ) ) )
 			
 (defun print-board (pboard num-of-rows num-of-cols list-of-moves mypos)
-    (cond ((null pboard) (princ "+")
+    (cond ((null pboard) (princ "  +")
         (setq i 0)
 	    (loop
 	        (cond ((member (list (1- num-of-rows) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
 	            (t (princ " ") (princ "+")) )
 	        (setq i (1+ i))
 	        (when (equal i num-of-cols) (terpri) (return t)) ) )
-	    (t (princ "+") (setq i 0) (loop
+	    (t (princ "  +") (setq i 0) (loop
 	        (cond ((member (list mypos i 'T) list-of-moves :test #'equal) (princ "-") (princ "+"))
 			    ((member (list (1- mypos) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
 		        (t (princ " ") (princ "+")) )
 		    (setq i (1+ i))
 		    (when (equal i num-of-cols) (terpri) (return t)) )
-         ;;(princ (1+ mypos)) (princ " ")			
+         (princ (1+ mypos)) (princ " ")			
 	     (print-row (car pboard) mypos 0) (terpri)
 	     (print-board (cdr pboard) num-of-rows num-of-cols list-of-moves (1+ mypos)) (terpri) ) ) )
 		 
@@ -85,7 +85,7 @@
 																		(t nil) ))
 										(t nil) )
 									(cond
-									    ((equal (nth 2 move) 'L) (update-square (1- r) c cboard type))
+									    ((equal (nth 2 move) 'L) (update-square r (1- c) cboard type))
 										(t nil) )
 									(update-square r c cboard type) )
 		(t (cond
@@ -201,6 +201,9 @@
 (setq num-of-cols (list-length (car board)))
 	
 (loop
+    (princ "   ")
+    (loop for i from 1 to num-of-cols do (princ i) (princ " "))
+	(terpri)
     (print-board pboard num-of-rows num-of-cols list-of-moves 0)
 	(accept-move)
 	(when (win-detected board cboard list-of-moves num-of-rows num-of-cols v h) (print-board pboard num-of-rows num-of-cols list-of-moves 0) (princ "YOU WIN!") (return t)) )
