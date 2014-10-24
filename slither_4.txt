@@ -15,7 +15,7 @@
 
 ;;function to accept board configuration and initialize counters
 (defun create-board (filename)
-    (setq infile (open filename))
+    (let ((infile (open filename)))
     (setq board (read infile))
 	(setq pboard board)
     (setq cboard (mapcar
@@ -23,7 +23,8 @@
                          (cond ((listp x) (mapcar
                                               (lambda (y)
                                                   (cond ((constantp y) 0)
-                                                      (t y) ) ) x))) ) board)))
+                                                      (t y) ) ) x))) ) board))
+	(close infile) ) )
 													  
 (defun print-row (row r c)    
     (cond ((null row)
@@ -76,7 +77,7 @@
 			(< c (1- num-of-cols)) ) (cond
 			                             ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
 										 ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
-										 ((equal (nth 2 move) 'L) (update-square r (1- c cboard type)))
+										 ((equal (nth 2 move) 'L) (update-square r (1- c) cboard type))
 										 (t (update-square r (1+ c) cboard type)) )
 									 (update-square r c cboard type) )
 		((equal c 0) (cond
@@ -86,7 +87,9 @@
 						 ((equal r (1- num-of-rows)) (cond 
 						                                 ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
 						                                 (t nil) ))
-						 (t nil) )
+						 (t (cond ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
+										         ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
+												 (t nil) )) )
 					 (cond
 					     ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard type))
 						 (t nil) )
@@ -98,7 +101,9 @@
 										((equal r (1- num-of-rows)) (cond
 										                                ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
 																		(t nil) ))
-										(t nil) )
+										(t (cond ((equal (nth 2 move) 'B) (update-square (1+ r) c cboard type))
+										         ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
+												 (t nil) )) )
 									(cond
 									    ((equal (nth 2 move) 'L) (update-square r (1- c) cboard type))
 										(t nil) )
@@ -106,8 +111,10 @@
 		(t (cond
 		       ((equal (nth 2 move) 'L) (update-square r (1- c) cboard type))
 			   ((equal (nth 2 move) 'R) (update-square r (1+ c) cboard type))
-			   ((equal (nth 2 move) 'T) (update-square (1- r) c cboard type))
-			   (t (update-square (1+ r) c cboard type)) )
+			   ((equal (nth 2 move) 'T) (cond ((> r 0) (update-square (1- r) c cboard type))
+			                                  (t nil) ))
+			   (t (cond ((< r (1- num-of-rows)) (update-square (1+ r) c cboard type))
+			            (t nil) )) )
 			(update-square r c cboard type) ) ) )
 			
 (defun is-row-valid (move num-of-rows)
