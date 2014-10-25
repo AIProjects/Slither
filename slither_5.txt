@@ -1,235 +1,241 @@
-;;function that describes the game to user
+;;;describe the game to user
 (defun describe-game ()
-    (write-line " ")
-	(write-line " ")
-    (write-line "Welcome to the game of slither!")
-	(write-line "Your goal is to put edges on the board so that they form a closed loop with no crossing or branches")
-	(terpri)
-	(write-line "Rules:")
-	(format t "1. Enter the edge to be put on a square on the board in the format M N E, where M = row number, N = column number and E = type of edge (T = top, ~%   B = bottom, L = left and R = right)~%" )
-	(format t "2. If there is a number written inside a square then it will have exactly that many edges surrounding it. ~%   For example if a square has 3 inside it, it should have 3 edges surrounding it. If a square has 0 inside it, it should not have any edge surrounding ~%   it. If a square has no number inside it, it can have any number of edges surrounding it.~%")
-	(write-line "3. Entering the same edge twice will undo that move")
-	(write-line "4. There is no time or move limit")
-	(write-line "5. Game will end when you are successfully able to put a loop on the board")
-    (terpri) )
+  (write-line " ")
+  (write-line " ")
+  (write-line "Welcome to the game of Slither!")
+  (format t "Your goal is to put edges on the board so that they form a closed loop with no~%crossing or branches.~%")
+  (terpri)
+  (write-line "Rules:")
+  (format t "1. Enter the edge to be put on a square on the board in the format M N E, where ~%   M = row number, N = column number and E = type of edge (T = top, B = bottom,~%   L = left and R = right).~%" )
+  (format t "2. If there is a number written inside a square then it will have exactly that~%   many edges surrounding it. ~%   For example if a square has 3 inside it, it should have 3 edges surrounding~%   it. If a square has 0 inside it, it should not have any edge surrounding it.~%   If a square has no number inside it, it can have any number of edges ~%   surrounding it.~%")
+  (write-line "3. Entering the same edge twice will undo that move.")
+  (write-line "4. There is no time or move limit.")
+  (write-line "5. Game will end when you are successfully able to put a loop on the board.")
+  (terpri) )
 
-;;function to accept board configuration and initialize counters
+;;;Accept board configuration and initialize counters
 (defun create-board (filename)
-    (let ((infile (open filename)))
-    (setq board (read infile))
-	(setq pboard board)
-    (setq cboard (mapcar
-                     (lambda (x)
-                         (cond ((listp x) (mapcar
-                                              (lambda (y)
-                                                  (cond ((constantp y) 0)
-                                                      (t y) ) ) x))) ) board))
-	(close infile) ) )
+  (let ((infile (open filename)))
+  (setq board (read infile))
+  (setq pboard board)
+  (setq cboard (mapcar (lambda (x) (cond ((listp x) (mapcar (lambda (y) (cond ((constantp y) 0)
+                                                                              (t y) ) ) x) )
+	 								     (t nil) )) board ))
+  (close infile) ) )
 													  
 (defun print-row (row r c)    
-    (cond ((null row)
-	    (cond ((member (list r (1- c) 'R) list-of-moves :test #'equal) (princ "|"))
-		    (t (princ " ")) ) )
+  (cond ((null row) (cond ((member (list r (1- c) 'R) list-of-moves :test #'equal) (princ "|"))
+	                      (t (princ " ")) ) )
         (t (cond ((member (list r c 'L) list-of-moves :test #'equal) (princ "|"))
-		    ((member (list r (1- c) 'R) list-of-moves :test #'equal) (princ "|"))
-		    (t (princ " ")) )
-            (cond ((equal '- (car row)) (princ " "))
-                (t (princ (car row))) )
-            (print-row (cdr row) r (1+ c)) ) ) )
+		         ((member (list r (1- c) 'R) list-of-moves :test #'equal) (princ "|"))
+		         (t (princ " ")) )
+           (cond ((equal '- (car row)) (princ " "))
+                 (t (princ (car row))) )
+           (print-row (cdr row) r (1+ c)) ) ) )
 			
 (defun print-board (pboard num-of-rows num-of-cols list-of-moves mypos)
-    (cond ((null pboard) (princ "  +")
-        (setq i 0)
-	    (loop
-	        (cond ((member (list (1- num-of-rows) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
-	            (t (princ " ") (princ "+")) )
-	        (setq i (1+ i))
-	        (when (equal i num-of-cols) (terpri) (return t)) ) )
-	    (t (princ "  +") (setq i 0) (loop
-	        (cond ((member (list mypos i 'T) list-of-moves :test #'equal) (princ "-") (princ "+"))
-			    ((member (list (1- mypos) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
-		        (t (princ " ") (princ "+")) )
-		    (setq i (1+ i))
-		    (when (equal i num-of-cols) (terpri) (return t)) )
-         (princ (1+ mypos)) (princ " ")			
-	     (print-row (car pboard) mypos 0) (terpri)
-	     (print-board (cdr pboard) num-of-rows num-of-cols list-of-moves (1+ mypos)) (terpri) ) ) )
+  (cond ((null pboard) (princ "  +")
+                       (setq i 0)
+	                   (loop
+	                     (cond ((member (list (1- num-of-rows) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
+	                           (t (princ " ") (princ "+")) )
+	                     (setq i (1+ i))
+	                     (when (equal i num-of-cols)
+						   (terpri)
+						   (return t)) ) )
+	    (t (princ "  +")
+		   (setq i 0)
+		   (loop
+	         (cond ((member (list mypos i 'T) list-of-moves :test #'equal) (princ "-") (princ "+"))
+			       ((member (list (1- mypos) i 'B) list-of-moves :test #'equal) (princ "-") (princ "+"))
+		           (t (princ " ") (princ "+")) )
+		     (setq i (1+ i))
+		     (when (equal i num-of-cols)
+			   (terpri)
+			   (return t)) )
+           (princ (1+ mypos)) (princ " ")			
+	       (print-row (car pboard) mypos 0) (terpri)
+	       (print-board (cdr pboard) num-of-rows num-of-cols list-of-moves (1+ mypos)) (terpri) ) ) )
 		 
+;;;Return edge of the adjacent square that gets affected due to current move
 (defun get-duplicate-move (move)
-    (setq r (nth 0 move))
-	(setq c (nth 1 move))
-	(cond
-		((equal c 0) (cond
-						 ((equal (nth 2 move) 'R) (list r (1+ c) 'L))
-						 ((and (equal r 0) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
-						 ((and (equal r (1- num-of-rows)) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
-						 (t (cond
-								((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
-								((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
-								(t nil) )) ))
-		((equal c (1- num-of-cols)) (cond
-									    ((equal (nth 2 move) 'L) (list r (1- c) 'R))
-										((and (equal r 0) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
-										((and (equal r (1- num-of-rows)) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
-										(t (cond
-											   ((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
-											   ((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
-											   (t nil) )) ) )
-		(t (cond
-			   ((equal (nth 2 move) 'R) (list r (1+ c) 'L))
-			   ((equal (nth 2 move) 'L) (list r (1- c) 'R))
-			   ((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
-			   ((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
-			   (t nil) ) ) ) )
+  (setq r (nth 0 move))
+  (setq c (nth 1 move))
+  (cond ((equal c 0) (cond ((equal (nth 2 move) 'R) (list r (1+ c) 'L))
+					       ((and (equal r 0) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
+						   ((and (equal r (1- num-of-rows)) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
+						   (t (cond ((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
+								    ((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
+								    (t nil) )) ))
+		((equal c (1- num-of-cols)) (cond ((equal (nth 2 move) 'L) (list r (1- c) 'R))
+										  ((and (equal r 0) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
+										  ((and (equal r (1- num-of-rows)) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
+										  (t (cond ((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
+											       ((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
+											       (t nil) )) ) )
+		(t (cond ((equal (nth 2 move) 'R) (list r (1+ c) 'L))
+		         ((equal (nth 2 move) 'L) (list r (1- c) 'R))
+			     ((and (< r (1- num-of-rows)) (equal (nth 2 move) 'B)) (list (1+ r) c 'T))
+			     ((and (> r 0) (equal (nth 2 move) 'T)) (list (1- r) c 'B))
+			     (t nil) )) ) )
 
-;;increment the counter for a particular square
+;;;Increment the counter for a particular square
 (defun update-square (r c cboard type)
-    (cond
-	    ((equal type 1)	(cond
-                            ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1+ (nth c (nth r cboard)))))
-		                    (t nil) ))
-        (t (cond
-		        ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1- (nth c (nth r cboard)))))
-		        (t nil) )) ) )
+  (cond ((equal type 1) (cond ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1+ (nth c (nth r cboard)))))
+	                          (t nil) ))
+        (t (cond ((numberp (nth c (nth r cboard))) (setf (nth c (nth r cboard)) (1- (nth c (nth r cboard)))))
+		         (t nil) )) ) )
 		
-;;to update the counter-board (cboard) based on the move
+;;;Update the counter-board (cboard) based on the move
 (defun update-score (move num-of-rows num-of-cols type)
-    (setq r (nth 0 move))
-	(setq c (nth 1 move))
-    (update-square r c cboard type)
-	(setq dmove (get-duplicate-move move))
-	(cond
-	    ((null dmove) nil)
+  (setq r (nth 0 move))
+  (setq c (nth 1 move))
+  (update-square r c cboard type)
+  (setq dmove (get-duplicate-move move))
+  (cond ((null dmove) nil)
 	    (t (setq r (nth 0 dmove)) (setq c (nth 1 dmove)) (update-square r c cboard type)) ) )
 			
 (defun is-row-valid (move num-of-rows)
-    (cond
-	    ((and
-		    (< (nth 0 move) num-of-rows)
-			(>= (nth 0 move) 0) ) t )
+  (cond ((and (< (nth 0 move) num-of-rows)
+			  (>= (nth 0 move) 0) ) t )
 		(t nil) ) )
 		
 (defun is-column-valid (move num-of-rows)
-    (cond
-        ((and
-	        (< (nth 1 move) num-of-cols)
-		    (>= (nth 1 move) 0) ) t )
+  (cond ((and (< (nth 1 move) num-of-cols)
+		      (>= (nth 1 move) 0) ) t )
 	    (t nil) ) )
 		
 (defun is-edge-valid (move)
-    (cond
-	    ((or
-		    (equal (nth 2 move) 'T)
-			(equal (nth 2 move) 'B)
-			(equal (nth 2 move) 'R)
-			(equal (nth 2 move) 'L) ) t )
+  (cond ((or (equal (nth 2 move) 'T)
+			 (equal (nth 2 move) 'B)
+			 (equal (nth 2 move) 'R)
+			 (equal (nth 2 move) 'L) ) t )
 		(t nil) ) )
 		
 (defun undo-move (num-of-rows num-of-cols list-of-moves move)
-    (update-score move num-of-rows num-of-cols 0)
-	(set 'list-of-moves (remove move list-of-moves :test #'equal)) )    
+  (update-score move num-of-rows num-of-cols 0)
+  (set 'list-of-moves (remove move list-of-moves :test #'equal)) )    
 
 (defun accept-move ()
-    (write-line " ")
-    (princ "Make a move : ")
-    (set 'move (list (read) (read) (read)))
-	(cond ((not (and (numberp (nth 0 move)) (numberp (nth 1 move)))) (princ "Invalid input!") (terpri))
-	      (t (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
-	         (cond	    
-	             ((not (is-row-valid move num-of-rows)) (princ "Please enter a valid row number") (terpri) (accept-move))
-		         ((not (is-column-valid move num-of-cols)) (princ "Please enter a valid column number") (terpri) (accept-move))
-		         ((not (is-edge-valid move)) (princ "Please enter a valid value for edge. Valid values for edge are T, B, R or L") (terpri) (accept-move))		
-	             (t (cond
-				        ((member move list-of-moves :test #'equal) (undo-move num-of-rows num-of-cols list-of-moves move))
-						((member (get-duplicate-move move) list-of-moves :test #'equal) (undo-move num-of-rows num-of-cols list-of-moves (get-duplicate-move move)))
-						(t (update-score move num-of-rows num-of-cols 1) (push move list-of-moves)) )) ) ) )
-    (write-line " ") )
+  (write-line " ")
+  (princ "Make a move : ")
+  (set 'move (list (read) (read) (read)))
+  (cond ((not (and (numberp (nth 0 move))
+                   (numberp (nth 1 move)))) (princ "Invalid input!")
+				                            (terpri))
+	    (t (setq move (mapcar (lambda (x) (cond ((equal T x) x) ((symbolp x) x) ((constantp x) (1- x)))) move))
+	       (cond ((not (is-row-valid move num-of-rows)) (princ "Please enter a valid row number")
+		                                                (terpri)
+														(accept-move))
+		         ((not (is-column-valid move num-of-cols)) (princ "Please enter a valid column number")
+				                                           (terpri)
+														   (accept-move))
+		         ((not (is-edge-valid move)) (princ "Please enter a valid value for edge. Valid values for edge are T, B, R or L") 
+				                             (terpri)
+											 (accept-move))		
+	             (t (cond ((member move list-of-moves :test #'equal) (undo-move num-of-rows num-of-cols list-of-moves move))
+						  ((member (get-duplicate-move move) list-of-moves :test #'equal) (undo-move num-of-rows num-of-cols list-of-moves (get-duplicate-move move)))
+						  (t (update-score move num-of-rows num-of-cols 1)
+						     (push move list-of-moves)) )) ) ) )
+  (write-line " ") )
 	
-;; checks if there is any T shape (crossing)
+;;;Check if there is any T shape (crossing or branch)
 (defun is-crossing (moves num-of-rows num-of-cols)
-    (setq crossing 0)
-	(loop for r from 0 to (- num-of-rows 2) do
+  (setq crossing 0)
+  (loop for r from 0 to (- num-of-rows 2) do
     (loop for c from 0 to (- num-of-cols 2) do
-	    (cond
-		     ((or
-			     (and
-				     (or (member (list r c 'B) moves :test #'equal) (member (list (1+ r) c 'T) moves :test #'equal))
-				     (or (member (list r (1+ c) 'B) moves :test #'equal) (member (list (1+ r) (1+ c) 'T) moves :test #'equal))
-				     (or (member (list r c 'R) moves :test #'equal) (member (list r (1+ c) 'L) moves :test #'equal)) )
-				 (and
-				     (or (member (list r c 'T) moves :test #'equal) (member (list (1- r) c 'B) moves :test #'equal))
-				     (or (member (list r (1+ c) 'T) moves :test #'equal) (member (list (1- r) (1+ c) 'B) moves :test #'equal))
-				     (or (member (list r c 'R) moves :test #'equal) (member (list r (1+ c) 'L) moves :test #'equal)) )
-				 (and
-				     (or (member (list r c 'L) moves :test #'equal) (member (list r (1- c) 'R) moves :test #'equal))
-				     (or (member (list (1+ r) c 'L) moves :test #'equal) (member (list (1+ r) (1- c) 'R) moves :test #'equal))
-				     (or (member (list r c 'B) moves :test #'equal) (member (list (1+ r) c 'T) moves :test #'equal)) )
-				 (and
-				     (or (member (list r c 'B) moves :test #'equal) (member (list (1+ r) c 'T) moves :test #'equal))
-				     (or (member (list r c 'R) moves :test #'equal) (member (list r (1+ c) 'L) moves :test #'equal))
-				     (or (member (list (1+ r) c 'R) moves :test #'equal) (member (list (1+ r) (1+ c) 'L) moves :test #'equal)) ) ) (setq crossing (1+ crossing)))
+	  (cond ((or (and (or (member (list r c 'B) moves :test #'equal)
+	                      (member (list (1+ r) c 'T) moves :test #'equal))
+				      (or (member (list r (1+ c) 'B) moves :test #'equal)
+					      (member (list (1+ r) (1+ c) 'T) moves :test #'equal))
+				      (or (member (list r c 'R) moves :test #'equal)
+					      (member (list r (1+ c) 'L) moves :test #'equal)) )
+				 (and (or (member (list r c 'T) moves :test #'equal)
+				          (member (list (1- r) c 'B) moves :test #'equal))
+				      (or (member (list r (1+ c) 'T) moves :test #'equal)
+					      (member (list (1- r) (1+ c) 'B) moves :test #'equal))
+				      (or (member (list r c 'R) moves :test #'equal)
+					      (member (list r (1+ c) 'L) moves :test #'equal)) )
+				 (and (or (member (list r c 'L) moves :test #'equal)
+				          (member (list r (1- c) 'R) moves :test #'equal))
+				      (or (member (list (1+ r) c 'L) moves :test #'equal)
+					      (member (list (1+ r) (1- c) 'R) moves :test #'equal))
+				      (or (member (list r c 'B) moves :test #'equal)
+					      (member (list (1+ r) c 'T) moves :test #'equal)) )
+				 (and (or (member (list r c 'B) moves :test #'equal)
+				          (member (list (1+ r) c 'T) moves :test #'equal))
+				      (or (member (list r c 'R) moves :test #'equal)
+					      (member (list r (1+ c) 'L) moves :test #'equal))
+				      (or (member (list (1+ r) c 'R) moves :test #'equal)
+					      (member (list (1+ r) (1+ c) 'L) moves :test #'equal)) ) ) (setq crossing (1+ crossing)))
 				 (t nil) ) ) )
-	(cond
-	    ((> crossing 0) t)
+  (cond ((> crossing 0) t)
 		(t nil) ) )
 		
-;;set edge in edge counter
+;;;Set edge in edge counter
 (defun update-edge-count (i edge-type direction)
-    (cond
-	    ((equal direction 0) (setf (nth i edge-type) (1- (nth i edge-type))))
-        (t(setf (nth i edge-type) (1+ (nth i edge-type)))) ) )
+  (cond ((equal direction 0) (setf (nth i edge-type)
+                             (1- (nth i edge-type))))
+        (t (setf (nth i edge-type)
+		   (1+ (nth i edge-type)))) ) )
 	
-;;checks if loop is closed
+;;;Check if loop is closed
 (defun is-loop (moves)
-    (setq v (make-list num-of-rows :initial-element 0))
-    (setq h (make-list num-of-cols :initial-element 0))
-	(loop for move in moves do
-    (cond
-	    ((or (equal (nth 2 move) 'L) (equal (nth 2 move) 'R)) (update-edge-count (nth 0 move) v 1))
-		(t (update-edge-count (nth 1 move) h 1)) ) ) 
-	(cond ((or
-             (some #'(lambda (n) (equal (mod n 2) 1)) h)
-		     (some #'(lambda (n) (equal (mod n 2) 1)) v) ) nil )
+  (setq v (make-list num-of-rows :initial-element 0))
+  (setq h (make-list num-of-cols :initial-element 0))
+  (loop for move in moves do
+    (cond ((or (equal (nth 2 move) 'L)
+	           (equal (nth 2 move) 'R)) (update-edge-count (nth 0 move) v 1))
+		  (t (update-edge-count (nth 1 move) h 1)) ) ) 
+	(cond ((or (some #'(lambda (n) (equal (mod n 2) 1)) h)
+		       (some #'(lambda (n) (equal (mod n 2) 1)) v) ) nil )
 		  (t t) ))
 		  
-;;to check if user won
+;;;Check if user won
 (defun win-detected (board cboard moves num-of-rows num-of-cols)
-    (cond
-	    ((and (equal cboard board)
+  (cond ((and (equal cboard board)
 		      (is-loop moves)
 			  (not (is-crossing moves num-of-rows num-of-cols)) ) t)
 		(t nil) ) )
 		  
-;;*******************actual game starts from here*************************
-
+;;;main routine
 (defun slither ()
+  (loop
+    (setq choice 'y)
+	(describe-game)
+		
+	(princ "Enter full path to the file containing description of the board:")
+	(setq infile (read-line))
+	(terpri)
+	
+	(create-board infile)
+		
+	;;initialize list of moves and number of rows and columns
+	(setq list-of-moves '())
+	(setq num-of-rows (list-length board))
+	(setq num-of-cols (list-length (car board)))
+		
 	(loop
-		(setq choice 'y)
-		(describe-game)
-		
-		(princ "Enter the name of the file containing description of the board:")
-		(setq infile (read-line))
+	  (princ "   ")
+	  (loop for i from 1 to num-of-cols do ;print column numbers
+	    (princ i)
+		(princ " "))
+	  (terpri)
+	  (print-board pboard num-of-rows num-of-cols list-of-moves 0)
+	  (accept-move)
+	  (when (win-detected board cboard list-of-moves num-of-rows num-of-cols)
+	    (princ "   ")
+		(loop for i from 1 to num-of-cols do ;print column numbers
+		  (princ i)
+		  (princ " "))
 		(terpri)
-		
-		;;(create-board "D:\\Ruchi\\docs\\UFL\\COURSES\\AI\\Project\\board.txt")
-		(create-board infile)
-		
-		;;initialize list of moves and number of rows and columns
-		(setq list-of-moves '())
-		(setq num-of-rows (list-length board))
-		(setq num-of-cols (list-length (car board)))
-		
-		(loop
-			(princ "   ")
-			(loop for i from 1 to num-of-cols do (princ i) (princ " "))
-			(terpri)
-			(print-board pboard num-of-rows num-of-cols list-of-moves 0)
-			(accept-move)
-			(when (win-detected board cboard list-of-moves num-of-rows num-of-cols) (princ "   ")
-			    (loop for i from 1 to num-of-cols do (princ i) (princ " ")) (terpri) (print-board pboard num-of-rows num-of-cols list-of-moves 0) (princ "YOU WIN!") (return t)) )
+		(print-board pboard num-of-rows num-of-cols list-of-moves 0)
+		(princ "YOU WIN!")
+		(return t)) )
 			
-		(terpri)
-		(princ "Do you want to play again? (y/n):")
-		(setq choice (read))
-		(when (equal choice 'n) (return t)) ) )
+	(terpri)
+	(princ "Do you want to play again? (y/n):")
+	(setq choice (read))
+	(when (equal choice 'n)
+	  (return t)) ) )
 		
